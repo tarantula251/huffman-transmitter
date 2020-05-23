@@ -3,18 +3,19 @@ package encoder;
 import huffman.HuffmanNode;
 import huffman.HuffmanNodeComparator;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class HuffmanEncoder {
     BufferedReader bufferedReader;
+    String outputFilePath;
     HashMap<Character, String> encodedCharactersMap = new HashMap<>();
 
-    public HuffmanEncoder(BufferedReader bufferedReader) {
+    public HuffmanEncoder(BufferedReader bufferedReader, String outputFilePath) {
         this.bufferedReader = bufferedReader;
+        this.outputFilePath = (!outputFilePath.endsWith(".txt")) ? outputFilePath + ".txt" : outputFilePath;
     }
 
     public void encode() throws IOException {
@@ -24,6 +25,7 @@ public class HuffmanEncoder {
             charAsciiList.add(charAscii);
             charAscii = bufferedReader.read();
         }
+        bufferedReader.close();
         Map<Integer, Long> occurrenceMap = charAsciiList.stream()
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
@@ -33,6 +35,7 @@ public class HuffmanEncoder {
                         (e1, e2) -> e2, LinkedHashMap::new));
         HuffmanNode rootNode = createHuffmanTree(occurrenceMap);
         generateEncodedChars(rootNode, "");
+        saveEncodedFile(charAsciiList);
     }
 
     private HuffmanNode createHuffmanTree(Map<Integer, Long> occurrenceMap) {
@@ -71,5 +74,22 @@ public class HuffmanEncoder {
         }
         generateEncodedChars(root.leftNode, s + "0");
         generateEncodedChars(root.rightNode, s + "1");
+    }
+
+    private void saveEncodedFile(ArrayList<Integer> charAsciiList) {
+        try {
+            File file = new File(outputFilePath);
+            FileWriter fileWriter = new FileWriter(file);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+            for (int charAscii : charAsciiList) {
+                String encodedChar = encodedCharactersMap.get((char) charAscii);
+                bufferedWriter.write(encodedChar + ";");
+            }
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        } catch (Exception e) {
+            System.out.println("Error during saving encoded file: " + e.getMessage());
+        }
     }
 }

@@ -7,9 +7,9 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        if(args.length != 2) {
+        if(args.length != 3) {
             System.err.println("Wrong number of arguments.\n");
-            System.out.println("Syntax: [encode|decode] file_path\n");
+            System.out.println("Syntax: [encode|decode] input_file_path output_file_path\n");
             return;
         }
 
@@ -19,9 +19,9 @@ public class Main {
             return;
         }
 
-        if(args[0].equals("encode")) {
+        if (args[0].equals("encode")) {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(args[1]));
-            HuffmanEncoder encoder = new HuffmanEncoder(bufferedReader);
+            HuffmanEncoder encoder = new HuffmanEncoder(bufferedReader, args[2]);
             encoder.encode();
         }
     }
