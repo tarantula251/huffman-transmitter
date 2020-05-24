@@ -1,8 +1,16 @@
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import decoder.HuffmanDecoder;
 import encoder.HuffmanEncoder;
+import huffman.HuffmanNode;
+import huffman.HuffmanNodeComparator;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.PriorityQueue;
+import java.util.Scanner;
 
 public class Main {
 
@@ -20,9 +28,39 @@ public class Main {
         }
 
         if (args[0].equals("encode")) {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(args[1]));
-            HuffmanEncoder encoder = new HuffmanEncoder(bufferedReader, args[2]);
-            encoder.encode();
+            HuffmanEncoder encoder = new HuffmanEncoder(args[1], args[2]);
+            PriorityQueue<HuffmanNode> nodes = encoder.encode();
+            // serialize nodes to json
+            if (nodes != null && nodes.size() > 0) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.writeValue(new File("data/nodes.json"), nodes);
+            }
+        }
+
+        if (args[0].equals("decode")) {
+            HuffmanDecoder decoder = new HuffmanDecoder(args[1], args[2]);
+            File nodesFile = new File("data", "nodes.json");
+            if (nodesFile.exists()) {
+                ArrayList<String> nodesList = new ArrayList<>();
+                Scanner scanner = new Scanner(nodesFile);
+                while (scanner.hasNext()) {
+                    nodesList.add(scanner.next());
+                }
+                scanner.close();
+                if (!nodesList.isEmpty()) {
+                    String nodesJson = nodesList.get(0);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.configure(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true);
+                    ArrayList<HuffmanNode> nodesQueue = objectMapper.readValue(nodesJson, new TypeReference<ArrayList<HuffmanNode>>(){});
+
+                    PriorityQueue priorityQueue = new PriorityQueue(nodesQueue.size(), new HuffmanNodeComparator());
+                    priorityQueue.addAll(nodesQueue);
+                    decoder.decode(priorityQueue);
+                }
+            } else {
+                System.err.println("JSON file with nodes doesn\'t exist.\n");
+                return;
+            }
         }
     }
 }

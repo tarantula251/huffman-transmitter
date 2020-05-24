@@ -25,6 +25,19 @@ public class HuffmanNode {
 
     public String toString() {
         return "count : " + occurenceCount +
-                " char : " + (char) charAscii + "\n";
+                ", char : " + (char) charAscii +
+                ", leftNode : " + nodeToString(leftNode) +
+                ", rightNode : " + nodeToString(rightNode) + "\n";
+    }
+
+    public String nodeToString(HuffmanNode node) {
+        Long occurenceCount = Long.MIN_VALUE;
+        char charAscii = Character.MIN_VALUE;
+        if (node != null) {
+            occurenceCount = node.getOccurenceCount();
+            charAscii = (char) node.getCharAscii();
+        }
+        return "[ count : " + occurenceCount +
+                ", char : " + charAscii + " ]";
     }
 }

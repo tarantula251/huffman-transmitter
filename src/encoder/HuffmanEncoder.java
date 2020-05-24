@@ -1,7 +1,7 @@
 package encoder;
 
 import huffman.HuffmanNode;
-import huffman.HuffmanNodeComparator;
+import huffman.HuffmanTreeGenerator;
 
 import java.io.*;
 import java.util.*;
@@ -9,17 +9,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class HuffmanEncoder {
-    BufferedReader bufferedReader;
+    String inputFilePath;
     String outputFilePath;
     HashMap<Character, String> encodedCharactersMap = new HashMap<>();
 
-    public HuffmanEncoder(BufferedReader bufferedReader, String outputFilePath) {
-        this.bufferedReader = bufferedReader;
+    public HuffmanEncoder(String inputFilePath, String outputFilePath) {
+        this.inputFilePath = inputFilePath;
         this.outputFilePath = (!outputFilePath.endsWith(".txt")) ? outputFilePath + ".txt" : outputFilePath;
     }
 
-    public void encode() throws IOException {
+    public PriorityQueue<HuffmanNode> encode() throws IOException {
         ArrayList<Integer> charAsciiList = new ArrayList<>();
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFilePath));
         int charAscii = bufferedReader.read();
         while (charAscii != -1) {
             charAsciiList.add(charAscii);
@@ -33,38 +34,14 @@ public class HuffmanEncoder {
                         .thenComparing(Map.Entry.comparingByKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (e1, e2) -> e2, LinkedHashMap::new));
-        HuffmanNode rootNode = createHuffmanTree(occurrenceMap);
-        generateEncodedChars(rootNode, "");
+        HuffmanTreeGenerator treeGenerator = new HuffmanTreeGenerator();
+        PriorityQueue<HuffmanNode> nodes = treeGenerator.createHuffmanTree(occurrenceMap);
+
+        assert nodes.peek() != null;
+        generateEncodedChars(nodes.peek(), "");
         saveEncodedFile(charAsciiList);
-    }
 
-    private HuffmanNode createHuffmanTree(Map<Integer, Long> occurrenceMap) {
-        System.out.println(occurrenceMap);
-        int nodesCount = occurrenceMap.size();
-        PriorityQueue<HuffmanNode> queue = new PriorityQueue<>(nodesCount, new HuffmanNodeComparator());
-
-        for (Integer charAscii : occurrenceMap.keySet()) {
-            HuffmanNode node = new HuffmanNode();
-            node.setCharAscii(charAscii);
-            node.setOccurenceCount(occurrenceMap.get(charAscii));
-            node.leftNode = null;
-            node.rightNode = null;
-            queue.add(node);
-        }
-
-        HuffmanNode root = null;
-        while (queue.size() > 1) {
-            HuffmanNode firstNode = queue.poll();
-            HuffmanNode secondNode = queue.poll();
-            HuffmanNode parentNode = new HuffmanNode();
-            parentNode.setOccurenceCount(firstNode.getOccurenceCount() + secondNode.getOccurenceCount());
-            parentNode.leftNode = firstNode;
-            parentNode.rightNode = secondNode;
-
-            root = parentNode;
-            queue.add(root);
-        }
-        return root;
+        return nodes;
     }
 
     private void generateEncodedChars(HuffmanNode root, String s) {
