@@ -2,3 +2,4 @@
 .idea/
 data/*
 .gradle/
+/src/META-INF
